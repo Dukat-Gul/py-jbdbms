@@ -8,7 +8,7 @@ import argparse
 import sys
 import time
 import binascii
-import socket
+#import socket
 import atexit
   
  	# Command line arguments
@@ -20,46 +20,46 @@ args = parser.parse_args()
 z = args.interval
 meter = args.meter	
 
-class StatsReporter:
-    def __init__(
-        self,
-        socket_type,
-        socket_address,
-        socket_data,
-        encoding='utf-8',
-    ):
-        self._socket_type = socket_type
-        self._socket_address = socket_address
-        self._encoding = encoding
-        self._socket_data = socket_data
-        self.create_socket()
-    
-    def create_socket(self):
-        try:
-            #sock = socket.socket(*self._socket_type,self._socket_data)
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-            sock.connect("/tmp/telegraf.sock")
-            self._sock = sock
-            print('Created socket')
-        except socket.error as e:
-            print(f'Error creating socket: {e}')
-
-    def close_socket(self):
-        try:
-            self._sock.close()
-            print('Closed socket')
-        except (AttributeError, socket.error) as e:
-            print(f'Error closing socket: {e}')
-    
-    def send_data(self, data):
-        try:
-            sent = self._sock.send(data.encode(self._encoding))
-            print(data)
-        except (AttributeError, socket.error) as e:
-            print(f'Error sending data on socket: {e}')
-            # attempt to recreate socket on error
-            self.close_socket()
-            self.create_socket()
+#class StatsReporter:
+#    def __init__(
+#        self,
+#        socket_type,
+#        socket_address,
+#        socket_data,
+#        encoding='utf-8',
+#    ):
+#        self._socket_type = socket_type
+#        self._socket_address = socket_address
+#        self._encoding = encoding
+#        self._socket_data = socket_data
+#        self.create_socket()
+#    
+#    def create_socket(self):
+#        try:
+#            #sock = socket.socket(*self._socket_type,self._socket_data)
+#            sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+#            sock.connect("/tmp/telegraf.sock")
+#            self._sock = sock
+#            print('Created socket')
+#        except socket.error as e:
+#            print(f'Error creating socket: {e}')
+#
+#    def close_socket(self):
+#        try:
+#            self._sock.close()
+#            print('Closed socket')
+#        except (AttributeError, socket.error) as e:
+#            print(f'Error closing socket: {e}')
+#    
+#    def send_data(self, data):
+#        try:
+#            sent = self._sock.send(data.encode(self._encoding))
+#            print(data)
+#        except (AttributeError, socket.error) as e:
+#            print(f'Error sending data on socket: {e}')
+#            # attempt to recreate socket on error
+#            self.close_socket()
+#            self.create_socket()
 
 def cellinfo1(data):			# process pack info
     infodata = data
@@ -170,15 +170,16 @@ else:
 
 bms.setDelegate(MyDelegate())		# setup delegate for notifications
 
-reporter = StatsReporter(
-    (socket.AF_UNIX, ),
-    '/tmp/telegraf.sock',
-    socket.SOCK_DGRAM)
-
-atexit.register(reporter.close_socket)
+#reporter = StatsReporter(
+#    (socket.AF_UNIX, ),
+#    '/tmp/telegraf.sock',
+#    socket.SOCK_DGRAM)
+#
+#atexit.register(reporter.close_socket)
 
 		# write empty data to 0x15 for notification request   --  address x03 handle for info & x04 handle for cell voltage
 		# using waitForNotifications(5) as less than 5 seconds has caused some missed notifications
+c = 0
 while True:
 	#print('sending')
 	result = bms.writeCharacteristic(0x15,b'\xdd\xa5\x03\x00\xff\xfd\x77',False)		# write x03 w/o response cell info
@@ -186,4 +187,6 @@ while True:
 	result = bms.writeCharacteristic(0x15,b'\xdd\xa5\x04\x00\xff\xfc\x77',False)		# write x04 w/o response cell voltages
 	bms.waitForNotifications(5)
 	time.sleep(z)
-   
+	c = c + 1
+	if c == 3:
+		break
